@@ -1,0 +1,78 @@
+import sqlite3
+from datetime import datetime
+from datetime import date
+
+conn = sqlite3.connect('bancodedados.db')
+cursor = conn.cursor()
+valor_da_diaria = 80.00
+
+
+def limpaTela():
+    print("\n"*100);
+
+def criaTab():
+    cursor.execute('CREATE TABLE hospedes_hotel(id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, nomehospede TEXT NOT NULL, entrada VARCHAR NOT NULL, datalimite VARCHAR NOT NULL);')
+
+
+def menuPrincipal():
+    opcao = int(input('Bem vindo ao gerencimento de hospedes\n\n1 - CheckIn de hospede\n2 - CheckOut de hospede\n3 - Listagem de hospedes\n'))
+    if opcao == 1:
+        nomeHospede = input('Qual o nome do hospede: ')
+        datalimite = input('Ate que data pretente ficar no hotel, (2017-12-30): ')
+        checkIn(nomeHospede, datalimite)
+    if opcao == 2:
+        nomeHospede = input('Qual o nome do hospede: ')
+        checkOut(nomeHospede)
+    if opcao == 3:
+        listagemHospedes()
+    if opcao != 1 and opcao != 2 and opcao != 3:
+        limpaTela()
+        menuPrincipal()
+
+
+
+def checkIn(nomeHospede, datalimite):
+    entrada = date.today()
+    cursor.execute("INSERT INTO hospedes_hotel(nomehospede, entrada, datalimite) VALUES (?,?,?)", (nomeHospede, entrada, datalimite))
+    conn.commit()
+    input('Pressione qualquer tecla para continuar...')
+    limpaTela()
+    menuPrincipal()
+
+def checkOut(nomeHospede):
+    cursor.execute('SELECT * FROM hospedes_hotel WHERE nomehospede=? OR nomehospede=? ORDER BY nomehospede', (nomeHospede, nomeHospede))
+
+    if len(cursor.fetchall()) >= 1:
+        cursor.execute('SELECT * FROM hospedes_hotel WHERE nomehospede=? OR nomehospede=? ORDER BY nomehospede', (nomeHospede, nomeHospede))
+
+        for linha in cursor.fetchall():
+            entrada = linha[2]
+            saida = linha[3]
+
+            valorTotal = diferencaEntreDatas(entrada, saida)*valor_da_diaria
+            print('O valor total da diaria foi ', valorTotal)
+        input('\nPressione qualquer tecla para continuar')
+
+        cursor.execute("DELETE FROM hospedes_hotel WHERE nomehospede = ? OR nomehospede = ?", (nomeHospede, nomeHospede))
+        conn.commit()
+    else:
+        input('\nNome do hospede esta incorreto')
+    limpaTela()
+    menuPrincipal()
+
+
+def listagemHospedes():
+    mostrar = cursor.execute('SELECT * FROM hospedes_hotel')
+    for linha in mostrar.fetchall():
+        print(linha)
+    input('\nPressione qualquer tecla para continuar...')
+    limpaTela()
+    menuPrincipal()
+
+
+def diferencaEntreDatas(data1, data2):
+    d1 = datetime.strptime(data1, "%Y-%m-%d")
+    d2 = datetime.strptime(data2, "%Y-%m-%d")
+    return abs((d1 - d2).days)
+
+menuPrincipal()

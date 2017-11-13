@@ -1,0 +1,30 @@
+import urllib.request
+ano = str(input("Digite o ano:"))
+
+content =  urllib.request.urlopen("http://www.anbima.com.br/feriados/fer_nacionais/" + ano + ".asp").read()
+content = content.decode('utf-8') #Tem que decodificar a pagina para o nosso padrao que é utf-8
+
+feriados = []
+
+posLinha = 0 #Inicia a posicao que queremos procurar as linhas
+while(posLinha != -1):
+    posLinha += 1 #Sempre procura na posLinha+1 para nao acharmos a mesma linha
+    stringLinha = '<tr align="left">' #Toda linha comeca assim
+    stringColuna = '</td>' #Toda Coluna termina assim
+    posLinha = content.find(stringLinha, posLinha) #Procura uma linha
+
+    if posLinha == -1: #Se nao tem mais linha, para!
+        break
+
+    posColuna = content.find(stringColuna, posLinha) #A partir da posicao da linha queremos a primeira coluna que é a data
+    mb = content[ posColuna - 8 : posColuna] #Pegamos os 8 caracteres antes da primeira coluna terminar
+    pos = mb.rfind('>') #Procuramos aonde a data comeca
+
+    if pos != -1:
+        mb = mb[pos+1 : len(mb)] #Se achou um > é pq a data nao tem 8 caracteres. Ex: 1/11/17
+
+    feriados.append(mb) #Coloca a data no vetor
+
+print("Os feriados nacionais em {}:".format(ano))
+for i in range(0, len(feriados)):
+    print(feriados[i])
